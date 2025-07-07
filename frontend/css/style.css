@@ -332,4 +332,54 @@ body {
         box-shadow: none;
         border: 1px solid #ddd;
     }
+}
+
+/* Backend Status Indicator */
+#backend-status {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+#backend-status:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+#backend-status i {
+    font-size: 0.7rem;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+}
+
+#backend-status.connected i {
+    animation: none;
+}
+
+#backend-status.connected {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #fff;
+}
+
+#backend-status.error {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #fff;
+}
+
+#backend-status.disconnected {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #fff;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 } 
