@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Check - Crop Health Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .check-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-left-color: #28a745; }
+        .error { border-left-color: #dc3545; }
+        .warning { border-left-color: #ffc107; }
+        .status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .details {
+            font-size: 14px;
+            color: #666;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Crop Health Assistant - Deployment Check</h1>
+    
+    <div class="check-item">
+        <div class="status">✅ Frontend Deployment</div>
+        <div class="details">
+            <strong>Status:</strong> Deployed to Netlify<br>
+            <strong>URL:</strong> <span id="frontend-url"></span><br>
+            <strong>Timestamp:</strong> <span id="timestamp"></span>
+        </div>
+    </div>
+
+    <div class="check-item" id="backend-check">
+        <div class="status">⏳ Backend Connection</div>
+        <div class="details">
+            <strong>Backend URL:</strong> <span id="backend-url"></span><br>
+            <strong>Status:</strong> <span id="backend-status">Checking...</span>
+        </div>
+        <button onclick="checkBackend()">Test Backend</button>
+    </div>
+
+    <div class="check-item" id="api-check">
+        <div class="status">⏳ API Endpoints</div>
+        <div class="details">
+            <strong>Disease Detection:</strong> <span id="disease-api-status">Not tested</span><br>
+            <strong>Market Prices:</strong> <span id="market-api-status">Not tested</span><br>
+            <strong>Weather:</strong> <span id="weather-api-status">Not tested</span>
+        </div>
+        <button onclick="testAPIs()">Test APIs</button>
+    </div>
+
+    <div class="check-item">
+        <div class="status">📱 Mobile Responsiveness</div>
+        <div class="details">
+            <strong>Viewport:</strong> <span id="viewport-size"></span><br>
+            <strong>Touch Support:</strong> <span id="touch-support"></span><br>
+            <strong>PWA Ready:</strong> <span id="pwa-status">No</span>
+        </div>
+    </div>
+
+    <div class="check-item">
+        <div class="status">🌐 Browser Compatibility</div>
+        <div class="details">
+            <strong>Browser:</strong> <span id="browser-info"></span><br>
+            <strong>JavaScript:</strong> <span id="js-status">Enabled</span><br>
+            <strong>Local Storage:</strong> <span id="storage-status">Available</span>
+        </div>
+    </div>
+
+    <script>
+        // Set basic info
+        document.getElementById('frontend-url').textContent = window.location.origin;
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        document.getElementById('backend-url').textContent = 'https://crop-health-backend.onrender.com/api';
+        
+        // Check viewport
+        document.getElementById('viewport-size').textContent = `${window.innerWidth}x${window.innerHeight}`;
+        document.getElementById('touch-support').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+        
+        // Check browser
+        document.getElementById('browser-info').textContent = navigator.userAgent.split(' ').pop();
+        
+        // Check local storage
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            document.getElementById('storage-status').textContent = 'Available';
+        } catch (e) {
+            document.getElementById('storage-status').textContent = 'Not available';
+        }
+
+        // Check backend connection
+        async function checkBackend() {
+            const statusEl = document.getElementById('backend-status');
+            const checkEl = document.getElementById('backend-check');
+            
+            try {
+                statusEl.textContent = 'Testing...';
+                const response = await fetch('https://crop-health-backend.onrender.com/api/health');
+                
+                if (response.ok) {
+                    statusEl.textContent = '✅ Connected';
+                    checkEl.className = 'check-item success';
+                } else {
+                    statusEl.textContent = '❌ Error: ' + response.status;
+                    checkEl.className = 'check-item error';
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Failed: ' + error.message;
+                checkEl.className = 'check-item error';
+            }
+        }
+
+        // Test API endpoints
+        async function testAPIs() {
+            const baseUrl = 'https://crop-health-backend.onrender.com/api';
+            
+            // Test disease detection
+            try {
+                const response = await fetch(`${baseUrl}/detect-disease`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ test: true })
+                });
+                document.getElementById('disease-api-status').textContent = response.ok ? '✅ Working' : '❌ Error';
+            } catch (e) {
+                document.getElementById('disease-api-status').textContent = '❌ Failed';
+            }
+            
+            // Test market prices
+            try {
+                const response = await fetch(`${baseUrl}/market-prices/tomato`);
+                document.getElementById('market-api-status').textContent = response.ok ? '✅ Working' : '❌ Error';
+            } catch (e) {
+                document.getElementById('market-api-status').textContent = '❌ Failed';
+            }
+            
+            // Test weather
+            try {
+                const response = await fetch(`${baseUrl}/weather/Mumbai`);
+                document.getElementById('weather-api-status').textContent = response.ok ? '✅ Working' : '❌ Error';
+            } catch (e) {
+                document.getElementById('weather-api-status').textContent = '❌ Failed';
+            }
+        }
+
+        // Auto-check backend on load
+        setTimeout(checkBackend, 1000);
+    </script>
+</body>
+</html> 
