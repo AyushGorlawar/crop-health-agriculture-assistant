@@ -26,8 +26,18 @@
                 Crop Health Assistant
             </a>
             
+            <!-- Backend Status -->
+            <div class="navbar-nav me-3">
+                <div class="nav-item">
+                    <span class="nav-link" id="backend-status" onclick="window.backendStatusChecker?.refresh()" title="Click to refresh backend status">
+                        <i class="fas fa-circle text-warning me-1"></i>
+                        <span id="backend-status-text">Checking...</span>
+                    </span>
+                </div>
+            </div>
+            
             <!-- Language Selector -->
-            <div class="navbar-nav ms-auto">
+            <div class="navbar-nav">
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-globe me-1"></i>
@@ -290,5 +300,92 @@
     <script src="js/weather.js"></script>
     <script src="js/farming-tips.js"></script>
     <script src="js/i18n.js"></script>
+    
+    <!-- Backend Status Check Script -->
+    <script>
+        // Backend status checker
+        class BackendStatusChecker {
+            constructor() {
+                this.statusElement = document.getElementById('backend-status');
+                this.statusTextElement = document.getElementById('backend-status-text');
+                this.iconElement = this.statusElement.querySelector('i');
+                this.checkInterval = null;
+                this.init();
+            }
+            
+            init() {
+                // Check immediately
+                this.checkBackendStatus();
+                
+                // Check every 30 seconds
+                this.checkInterval = setInterval(() => {
+                    this.checkBackendStatus();
+                }, 30000);
+                
+                // Also check when page becomes visible
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        this.checkBackendStatus();
+                    }
+                });
+            }
+            
+            async checkBackendStatus() {
+                try {
+                    // Get the API base URL from the app
+                    const apiBaseUrl = window.app ? window.app.apiBaseUrl : 'https://crop-health-backend.onrender.com/api';
+                    const response = await fetch(`${apiBaseUrl}/health`, {
+                        method: 'GET',
+                        timeout: 5000
+                    });
+                    
+                    if (response.ok) {
+                        this.updateStatus('connected', 'Backend Connected');
+                    } else {
+                        this.updateStatus('error', 'Backend Error');
+                    }
+                } catch (error) {
+                    console.log('Backend status check failed:', error.message);
+                    this.updateStatus('disconnected', 'Backend Offline');
+                }
+            }
+            
+            updateStatus(status, text) {
+                // Remove existing classes
+                this.iconElement.className = 'fas fa-circle me-1';
+                
+                // Add status-specific styling
+                switch (status) {
+                    case 'connected':
+                        this.iconElement.classList.add('text-success');
+                        this.statusElement.title = 'Backend is connected and working';
+                        break;
+                    case 'error':
+                        this.iconElement.classList.add('text-danger');
+                        this.statusElement.title = 'Backend is responding but with errors';
+                        break;
+                    case 'disconnected':
+                        this.iconElement.classList.add('text-warning');
+                        this.statusElement.title = 'Backend is offline or unreachable';
+                        break;
+                    default:
+                        this.iconElement.classList.add('text-warning');
+                        this.statusElement.title = 'Checking backend status...';
+                }
+                
+                this.statusTextElement.textContent = text;
+            }
+            
+            // Method to manually trigger a status check
+            refresh() {
+                this.checkBackendStatus();
+            }
+        }
+        
+        // Initialize backend status checker when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.backendStatusChecker = new BackendStatusChecker();
+        });
+    </script>
 </body>
 </html> 
