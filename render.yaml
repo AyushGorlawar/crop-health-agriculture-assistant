@@ -5,10 +5,12 @@ services:
     plan: free
     region: oregon
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('punkt')"
+    buildCommand: pip install -r requirements-simple.txt && python -c "import nltk; nltk.download('punkt')"
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     healthCheckPath: /api/health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.7
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
@@ -23,4 +25,4 @@ services:
         sync: false
       - key: AGMARKNET_API_KEY
         sync: false
-    autoDeploy: true
+    autoDeploy: true 
