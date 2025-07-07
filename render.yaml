@@ -3,13 +3,24 @@ services:
     name: crop-health-backend
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    region: oregon
     rootDir: backend
+    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('punkt')"
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    healthCheckPath: /api/health
     envVars:
-      - key: SECRET_KEY
-        generateValue: true
       - key: FLASK_ENV
         value: production
-      - key: PYTHON_VERSION
-        value: 3.9.18 
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///crop_assistant.db
+      - key: MAX_CONTENT_LENGTH
+        value: 16777216
+      - key: UPLOAD_FOLDER
+        value: uploads
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: AGMARKNET_API_KEY
+        sync: false
+    autoDeploy: true
