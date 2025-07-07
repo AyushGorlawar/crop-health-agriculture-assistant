@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Status Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .status-display {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .status-checking {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-connected {
+            background-color: #d1edff;
+            color: #0c5460;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-disconnected {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 Backend Status Test</h1>
+        
+        <div class="status-display status-checking" id="statusDisplay">
+            <span class="status-icon">⏳</span>
+            <span id="statusText">Checking backend status...</span>
+        </div>
+        
+        <div>
+            <button onclick="testLocalBackend()">Test Local Backend</button>
+            <button onclick="testRenderBackend()">Test Render Backend</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function updateStatus(status, text) {
+            const display = document.getElementById('statusDisplay');
+            const textEl = document.getElementById('statusText');
+            
+            // Remove existing classes
+            display.className = 'status-display';
+            
+            // Add status-specific styling
+            switch (status) {
+                case 'checking':
+                    display.classList.add('status-checking');
+                    display.querySelector('.status-icon').textContent = '⏳';
+                    break;
+                case 'connected':
+                    display.classList.add('status-connected');
+                    display.querySelector('.status-icon').textContent = '✅';
+                    break;
+                case 'error':
+                    display.classList.add('status-error');
+                    display.querySelector('.status-icon').textContent = '❌';
+                    break;
+                case 'disconnected':
+                    display.classList.add('status-disconnected');
+                    display.querySelector('.status-icon').textContent = '⚠️';
+                    break;
+            }
+            
+            textEl.textContent = text;
+        }
+
+        async function testBackend(url, name) {
+            updateStatus('checking', `Testing ${name}...`);
+            log(`Testing ${name}: ${url}`);
+            
+            try {
+                const response = await fetch(`${url}/health`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('connected', `${name} Connected - ${data.status}`);
+                    log(`✅ ${name} connected successfully`);
+                    log(`Response: ${JSON.stringify(data)}`);
+                } else {
+                    updateStatus('error', `${name} Error - ${response.status}`);
+                    log(`❌ ${name} error: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                updateStatus('disconnected', `${name} Offline`);
+                log(`❌ ${name} failed: ${error.message}`);
+            }
+        }
+
+        function testLocalBackend() {
+            testBackend('http://localhost:5000/api', 'Local Backend');
+        }
+
+        function testRenderBackend() {
+            testBackend('https://crop-health-backend.onrender.com/api', 'Render Backend');
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            log('Page loaded, testing Render backend...');
+            setTimeout(() => testRenderBackend(), 1000);
+        });
+    </script>
+</body>
+</html> 
